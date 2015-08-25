@@ -70,7 +70,11 @@ function retrieveAllEvents(dayToFind) {
 				}
 			}
 			if (events.length > 0 || deaths.length > 0 || births.length > 0) {
-				dfd.resolve([events, deaths, births]);
+				dfd.resolve({
+					events: events,
+					deaths: deaths,
+					births: births
+				});
 			}
 			else {
 				dfd.reject();
@@ -89,25 +93,20 @@ function getEvent() {
 	var landing = moment([1969, 6, 20]);
 	var dayInHistory = moment();
 	dayInHistory.subtract(Math.ceil(today.diff(landing, 'days')/2), 'days');
-//	dayInHistory.subtract(3, 'days'); // Uncomment and edit this line if you need to move the date around for testing
-	var listOfAllEvents = new Array(); // retrieveAlLEvents  will return an array of arrays of historical events, deaths and births
+	dayInHistory.subtract(3, 'days'); // Uncomment and edit this line if you need to move the date around for testing
 	var listOfEvents = new Array();
-	var listOfDeaths = new Array();
-	var listOfBirths = new Array();
-	retrieveAllEvents(dayInHistory).then(function(listOfAllEvents) {
-		listOfEvents = listOfAllEvents[0];
-		listOfDeaths = listOfAllEvents[1];
-		listOfBirths = listOfAllEvents[2];
-		if (listOfEvents.length > 0) {
-			var eventToTweet = listOfEvents[Math.floor(Math.random() * listOfEvents.length)];
+	retrieveAllEvents(dayInHistory).then(function(listOfEvents) {
+		listOfEvents.events;
+		if (listOfEvents.events.length > 0) {
+			var eventToTweet = listOfEvents.events[Math.floor(Math.random() * listOfEvents.events.length)];
 			tweetEvent(eventToTweet, "Event");
 		} 
-		else if (listOfDeaths.length > 0) {
-			var eventToTweet = listOfDeaths[Math.floor(Math.random() * listOfDeaths.length)];
+		else if (listOfEvents.deaths.length > 0) {
+			var eventToTweet = listOfEvents.deaths[Math.floor(Math.random() * listOfEvents.deaths.length)];
 			tweetEvent(eventToTweet, "Death");
 		}
-		else if (listOfBirths.length > 0) { // This if statement could be skipped, but it's here for form and parallelism
-			var eventToTweet = listOfBirths[Math.floor(Math.random() * listOfBirths.length)];
+		else if (listOfEvents.births.length > 0) { // This if statement could be skipped, but it's here for form and parallelism
+			var eventToTweet = listOfEvents.births[Math.floor(Math.random() * listOfEvents.births.length)];
 			tweetEvent(eventToTweet, "Birth");
 		}
 	},
