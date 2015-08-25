@@ -9,11 +9,28 @@ moment().format();
 // We need to include our configuration file
 var T = new Twit(require('./config.js'));
 
-function tweetEvent(event) {
-	var eventToTweet = event.substr(0,(event.length)-1); // Events typically end in a period, which we don't want in the middle of a tweet
-	if (eventToTweet.length > 93) { // If the tweet will be too long, truncate the event with an ellipsis
-		eventToTweet = eventToTweet.substr(0,92)+"…";
+function tweetEvent(event, eventType) {
+	var tweetText = event; 
+	if (eventType == "Event") {
+		var tweetText = tweetText.substr(0,(tweetText.length)-1); // Events typically end in a period, which we don't want in the middle of a tweet
+		if (tweetText.length > 93) { // If the tweet will be too long, truncate the event with an ellipsis
+			tweetText = tweetText.substr(0,92)+"…";
+		}
+		tweetText = tweetText + ' occurred closer to the moon landing than today';
 	}
+	else if (eventType == "Death") {
+		if (tweetText.length > 97) { // If the tweet will be too long, truncate the death with an ellipsis
+			tweetText = tweetText.substr(0,96 )+"…";
+		}
+		tweetText = tweetText + ' died closer to the moon landing than today';
+	} else if (eventType == "Birth") { // This if statement could be skipped, but it's here for form and parallelism
+		if (tweetText.length > 93) { // If the tweet will be too long, truncate the death with an ellipsis
+			tweetText = tweetText.substr(0,92 )+"…";
+		}
+		tweetText = tweetText + ' was born closer to the moon landing than today';
+	}
+//	console.log(tweetText);
+	
 	T.post('statuses/update', { status: eventToTweet+' occurred closer to the moon landing than today' }, function (err, data, response) {
 //		console.log(err, data);
 		if (response) {
@@ -25,44 +42,13 @@ function tweetEvent(event) {
 	})
 }
 
-function tweetDeath(event) {
-	var eventToTweet = event;
-	if (eventToTweet.length > 97) { // If the tweet will be too long, truncate the death with an ellipsis
-		eventToTweet = eventToTweet.substr(0,96 )+"…";
-	}
-	T.post('statuses/update', { status: eventToTweet+' died closer to the moon landing than today' }, function (err, data, response) {
-//		console.log(err, data);
-		if (response) {
-//			console.log('Success! It tweeted an event');
-		}
-		if (err) {
-//			console.log('There was an error with Twitter:', error);
-		}
-	})
-}
-
-function tweetBirth(event) {
-	var eventToTweet = event;
-	if (eventToTweet.length > 93) { // If the tweet will be too long, truncate the birth with an ellipsis
-		eventToTweet = eventToTweet.substr(0,92 )+"…";
-	}
-	T.post('statuses/update', { status: eventToTweet+' was born closer to the moon landing than today' }, function (err, data, response) {
-//		console.log(err, data);
-		if (response) {
-//			console.log('Success! It tweeted an event');
-		}
-		if (err) {
-//			console.log('There was an error with Twitter:', error);
-		}
-	})
-}
-
-
-function retrieveEvents(dayToFind) {
+function retrieveAllEvents(dayToFind) {
 	var dfd = new _.Deferred();
 	var monthToFind = dayToFind.get('month')+1;
 	var url = "http://history.muffinlabs.com/date/" + monthToFind + "/" + dayToFind.get('date');
 	var events = new Array();
+	var deaths = new Array();
+	var births = new Array();
 	request({
 	    url: url,
 	    json: true
@@ -73,68 +59,18 @@ function retrieveEvents(dayToFind) {
 					events.push(body['data']['Events'][exKey]['text']);
 				}
 			}
-			if (events.length > 0) {
-				dfd.resolve(events);
-			}
-			else {
-				dfd.reject();
-			}
-	    }
-	    else {
-	    	console.log("error");
-	    	dfd.reject();
-	    }
-	})	
-	return dfd.promise();
-}
-
-function retrieveDeaths(dayToFind) {
-	var dfd = new _.Deferred();
-	var monthToFind = dayToFind.get('month')+1;
-	var url = "http://history.muffinlabs.com/date/" + monthToFind + "/" + dayToFind.get('date');
-	var events = new Array();
-	request({
-	    url: url,
-	    json: true
-	}, function (error, response, body) {
-	    if (!error && response.statusCode === 200) {
 			for (var exKey in body['data']['Deaths']) {
 				if (body['data']['Deaths'][exKey]['year'] == dayToFind.get('year')) {
-					events.push(body['data']['Deaths'][exKey]['text']);
+					deaths.push(body['data']['Deaths'][exKey]['text']);
 				}
 			}
-			if (events.length > 0) {
-				dfd.resolve(events);
-			}
-			else {
-				dfd.reject();
-			}
-	    }
-	    else {
-	    	console.log("error");
-	    	dfd.reject();
-	    }
-	})	
-	return dfd.promise();
-}
-
-function retrieveBirths(dayToFind) {
-	var dfd = new _.Deferred();
-	var monthToFind = dayToFind.get('month')+1;
-	var url = "http://history.muffinlabs.com/date/" + monthToFind + "/" + dayToFind.get('date');
-	var events = new Array();
-	request({
-	    url: url,
-	    json: true
-	}, function (error, response, body) {
-	    if (!error && response.statusCode === 200) {
 			for (var exKey in body['data']['Births']) {
 				if (body['data']['Births'][exKey]['year'] == dayToFind.get('year')) {
-					events.push(body['data']['Births'][exKey]['text']);
+					births.push(body['data']['Births'][exKey]['text']);
 				}
 			}
-			if (events.length > 0) {
-				dfd.resolve(events);
+			if (events.length > 0 || deaths.length > 0 || births.length > 0) {
+				dfd.resolve([events, deaths, births]);
 			}
 			else {
 				dfd.reject();
@@ -153,33 +89,38 @@ function getEvent() {
 	var landing = moment([1969, 6, 20]);
 	var dayInHistory = moment();
 	dayInHistory.subtract(Math.ceil(today.diff(landing, 'days')/2), 'days');
-//	dayInHistory.subtract(2, 'days');
- 	var eventFound = false;
+//	dayInHistory.subtract(3, 'days'); // Uncomment and edit this line if you need to move the date around for testing
+	var listOfAllEvents = new Array(); // retrieveAlLEvents  will return an array of arrays of historical events, deaths and births
 	var listOfEvents = new Array();
-	retrieveEvents(dayInHistory).then(function(listOfEvents) {
-		var eventToTweet = listOfEvents[Math.floor(Math.random() * listOfEvents.length)];
-		tweetEvent(eventToTweet);
+	var listOfDeaths = new Array();
+	var listOfBirths = new Array();
+	retrieveAllEvents(dayInHistory).then(function(listOfAllEvents) {
+		listOfEvents = listOfAllEvents[0];
+		listOfDeaths = listOfAllEvents[1];
+		listOfBirths = listOfAllEvents[2];
+		if (listOfEvents.length > 0) {
+			var eventToTweet = listOfEvents[Math.floor(Math.random() * listOfEvents.length)];
+			tweetEvent(eventToTweet, "Event");
+		} 
+		else if (listOfDeaths.length > 0) {
+			var eventToTweet = listOfDeaths[Math.floor(Math.random() * listOfDeaths.length)];
+			tweetEvent(eventToTweet, "Death");
+		}
+		else if (listOfBirths.length > 0) { // This if statement could be skipped, but it's here for form and parallelism
+			var eventToTweet = listOfBirths[Math.floor(Math.random() * listOfBirths.length)];
+			tweetEvent(eventToTweet, "Birth");
+		}
 	},
 	function (err) {
-		retrieveDeaths(dayInHistory).then(function(listOfEvents) {
-			var eventToTweet = listOfEvents[Math.floor(Math.random() * listOfEvents.length)];
-			tweetDeath(eventToTweet);
-		},
-		function (err) {
-			retrieveBirths(dayInHistory).then(function(listofEvents) {
-				var eventToTweet = listOfEvents[Math.floor(Math.random() * listOfEvents.length)];
-				tweetBirth(eventToTweet);
-			},
-			function (err) {
-				console.log("No events");
-			})
-		})
+		console.log("No Events");
 	});
 }
 
 // Try to retweet something as soon as we run the program...
 getEvent();
 //tweetEvent();
+
+// This code is originally from dariusk but I'm calling this script daily via cron instead
 // ...and then every hour after that. Time here is in milliseconds, so
 // 1000 ms = 1 second, 1 sec * 60 = 1 min, 1 min * 60 = 1 hour --> 1000 * 60 * 60
 //setInterval(tweetEvent, 1000 * 60 * 60);
