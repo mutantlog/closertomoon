@@ -31,7 +31,7 @@ function tweetEvent(event, eventType) {
 	}
 //	console.log(tweetText);
 	
-	T.post('statuses/update', { status: eventToTweet+' occurred closer to the moon landing than today' }, function (err, data, response) {
+	T.post('statuses/update', { status: tweetText }, function (err, data, response) {
 //		console.log(err, data);
 		if (response) {
 //			console.log('Success! It tweeted an event');
