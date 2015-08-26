@@ -93,7 +93,7 @@ function getEvent() {
 	var landing = moment([1969, 6, 20]);
 	var dayInHistory = moment();
 	dayInHistory.subtract(Math.ceil(today.diff(landing, 'days')/2), 'days');
-	dayInHistory.subtract(3, 'days'); // Uncomment and edit this line if you need to move the date around for testing
+//	dayInHistory.subtract(3, 'days'); // Uncomment and edit this line if you need to move the date around for testing
 	var listOfEvents = new Array();
 	retrieveAllEvents(dayInHistory).then(function(listOfEvents) {
 		listOfEvents.events;
