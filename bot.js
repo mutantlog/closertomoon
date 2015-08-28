@@ -39,15 +39,20 @@ function composeTweet(event, eventType) {
 }
 
 function tweetEvent(tweetText) {
-	T.post('statuses/update', { status: tweetText }, function (err, data, response) {
-//		console.log(err, data);
-		if (response) {
-//			console.log('Success! It tweeted an event');
-		}
-		if (err) {
-			console.log('There was an error with Twitter:', error);
-		}
-	})
+	if (debug) {
+		console.log(tweetText)
+	}
+	else {
+		T.post('statuses/update', { status: tweetText }, function (err, data, response) {
+	//		console.log(err, data);
+			if (response) {
+	//			console.log('Success! It tweeted an event');
+			}
+			if (err) {
+				console.log('There was an error with Twitter:', error);
+			}
+		})
+	}
 }
 
 function getLastTweet() {
@@ -139,12 +144,7 @@ function getEvent() {
 				}
 				else {
 					tweeted = true;		
-					if (debug) {
-						console.log(composedEventToTweet);
-					}
-					else {
-						tweetEvent(composedEventToTweet);
-					}
+					tweetEvent(composedEventToTweet);
 				}
 			}
 			while (listOfEvents.deaths.length > 0 && tweeted == false) {
@@ -156,12 +156,7 @@ function getEvent() {
 				}
 				else {
 					tweeted = true;	
-					if (debug) {
-						console.log(composedEventToTweet);
-					}
-					else {
-						tweetEvent(composedEventToTweet);
-					}
+					tweetEvent(composedEventToTweet);
 				}
 			}
 			while (listOfEvents.births.length > 0 && tweeted == false) {
@@ -173,12 +168,7 @@ function getEvent() {
 				}
 				else {
 					tweeted = true;
-					if (debug) {
-						console.log(composedEventToTweet);
-					}
-					else {
-						tweetEvent(composedEventToTweet);
-					}
+					tweetEvent(composedEventToTweet);
 				}
 			}
 			if (tweeted == false) {
