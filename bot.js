@@ -1,16 +1,18 @@
 // Our Twitter library
-var request = require('request');
+//var request = require('request');
+var request = require('sync-request');
 var cheerio = require('cheerio');
 var _ = require('underscore.deferred');
 var Twit = require('twit');
 var moment = require('moment');
+var fs = require('fs');
 moment().format();
 
 // We need to include our configuration file
 var T = new Twit(require('./config.js'));
 
 var tweets = new Array();
-var debug = false;
+var debug = true;
 
 function composeTweet(event, eventType) {
 	var tweetText = event; 
@@ -69,47 +71,50 @@ function getLastTweet() {
 
 function retrieveAllEvents(dayToFind) {
 	var dfd = new _.Deferred();
-	var monthToFind = dayToFind.get('month')+1;
-	var url = "http://history.muffinlabs.com/date/" + monthToFind + "/" + dayToFind.get('date');
 	var events = new Array();
 	var deaths = new Array();
 	var births = new Array();
-	request({
-	    url: url,
-	    json: true
-	}, function (error, response, body) {
-	    if (!error && response.statusCode === 200) {
-			for (var exKey in body['data']['Events']) {
-				if (body['data']['Events'][exKey]['year'] == dayToFind.get('year')) {
-					events.push(body['data']['Events'][exKey]['text']);
-				}
-			}
-			for (var exKey in body['data']['Deaths']) {
-				if (body['data']['Deaths'][exKey]['year'] == dayToFind.get('year')) {
-					deaths.push(body['data']['Deaths'][exKey]['text']);
-				}
-			}
-			for (var exKey in body['data']['Births']) {
-				if (body['data']['Births'][exKey]['year'] == dayToFind.get('year')) {
-					births.push(body['data']['Births'][exKey]['text']);
-				}
-			}
-			if (events.length > 0 || deaths.length > 0 || births.length > 0) {
-				dfd.resolve({
-					events: events,
-					deaths: deaths,
-					births: births
-				});
-			}
-			else {
-				dfd.reject();
-			}
-	    }
-	    else {
-	    	console.log("error");
-	    	dfd.reject();
-	    }
-	})	
+	
+	var eventsFile = "data/"+dayToFind.format("MM-DD")+".json";
+	var eventsJSON;
+	try {
+		eventsJSON = JSON.parse(fs.readFileSync(eventsFile));
+	} catch (e) {
+		if (e.code === 'ENOENT') {
+			console.log('File not found!');
+			var url = "http://history.muffinlabs.com/date/" + dayToFind.format("M/D"); // This site doesn't require 0 padding of months or days
+			var results = request('GET', url);
+			eventsJSON = JSON.parse(results.getBody());
+		} 
+		else {
+			throw e;
+		}
+	}
+	for (var exKey in eventsJSON['data']['Events']) {
+		if (eventsJSON['data']['Events'][exKey]['year'] == dayToFind.get('year')) {
+			events.push(eventsJSON['data']['Events'][exKey]['text']);
+		}
+	}
+	for (var exKey in eventsJSON['data']['Deaths']) {
+		if (eventsJSON['data']['Deaths'][exKey]['year'] == dayToFind.get('year')) {
+			deaths.push(eventsJSON['data']['Deaths'][exKey]['text']);
+		}
+	}
+	for (var exKey in eventsJSON['data']['Births']) {
+		if (eventsJSON['data']['Births'][exKey]['year'] == dayToFind.get('year')) {
+			births.push(eventsJSON['data']['Births'][exKey]['text']);
+		}
+	}
+	if (events.length > 0 || deaths.length > 0 || births.length > 0) {
+		dfd.resolve({
+			events: events,
+			deaths: deaths,
+			births: births
+		});
+	}
+	else {
+		dfd.reject();
+	}
 	return dfd.promise();
 }
 
@@ -120,7 +125,7 @@ function getEvent() {
 	var recentTweets = new Array();
 	var tweeted = false;
 	dayInHistory.subtract(Math.ceil(today.diff(landing, 'days')/2), 'days');
-//	dayInHistory.subtract(3, 'days'); // Uncomment and edit this line if you need to move the date around for testing
+//	dayInHistory.subtract(10, 'days'); // Uncomment and edit this line if you need to move the date around for testing
 	var listOfEvents = new Array();
 	retrieveAllEvents(dayInHistory).then(function(returnedListOfEvents) {
 		getLastTweet().then(function(recentTweets) {
