@@ -134,7 +134,6 @@ function retrieveAllEvents(dayToFind) {
 		}
 		else {
 			allEvents = parseEvents(JSON.parse(data), dayToFind);
-			console.log(allEvents.deaths);
 			if (allEvents.events.length > 0 || allEvents.deaths.length > 0 || allEvents.births.length > 0) {
 				dfd.resolve({
 					events: allEvents.events,
