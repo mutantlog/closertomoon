@@ -1,6 +1,5 @@
 // Our Twitter library
-//var request = require('request');
-var request = require('sync-request');
+var request = require('request');
 var cheerio = require('cheerio');
 var _ = require('underscore.deferred');
 var Twit = require('twit');
@@ -12,7 +11,7 @@ moment().format();
 var T = new Twit(require('./config.js'));
 
 var tweets = new Array();
-var debug = true;
+var debug = false;
 
 function composeTweet(event, eventType) {
 	var tweetText = event; 
@@ -40,7 +39,7 @@ function composeTweet(event, eventType) {
 
 function tweetEvent(tweetText) {
 	if (debug) {
-		console.log(tweetText)
+		console.log(tweetText);
 	}
 	else {
 		T.post('statuses/update', { status: tweetText }, function (err, data, response) {
@@ -74,27 +73,10 @@ function getLastTweet() {
 	return dfd.promise();
 }
 
-function retrieveAllEvents(dayToFind) {
-	var dfd = new _.Deferred();
+function parseEvents(eventsJSON, dayToFind) { // This function parses a set of events from the sources in retrieveAllEvents(dayToFind) and dumps out the ones that match the desired year into an array of arrays
 	var events = new Array();
 	var deaths = new Array();
 	var births = new Array();
-	
-	var eventsFile = "data/"+dayToFind.format("MM-DD")+".json";
-	var eventsJSON;
-	try {
-		eventsJSON = JSON.parse(fs.readFileSync(eventsFile));
-	} catch (e) {
-		if (e.code === 'ENOENT') {
-			console.log('File not found!');
-			var url = "http://history.muffinlabs.com/date/" + dayToFind.format("M/D"); // This site doesn't require 0 padding of months or days
-			var results = request('GET', url);
-			eventsJSON = JSON.parse(results.getBody());
-		} 
-		else {
-			throw e;
-		}
-	}
 	for (var exKey in eventsJSON['data']['Events']) {
 		if (eventsJSON['data']['Events'][exKey]['year'] == dayToFind.get('year')) {
 			events.push(eventsJSON['data']['Events'][exKey]['text']);
@@ -110,16 +92,61 @@ function retrieveAllEvents(dayToFind) {
 			births.push(eventsJSON['data']['Births'][exKey]['text']);
 		}
 	}
-	if (events.length > 0 || deaths.length > 0 || births.length > 0) {
-		dfd.resolve({
-			events: events,
-			deaths: deaths,
-			births: births
-		});
-	}
-	else {
-		dfd.reject();
-	}
+	return {events: events, deaths: deaths, births: births};
+}
+
+function retrieveAllEvents(dayToFind) {
+	var dfd = new _.Deferred();
+	var allEvents = new Array();
+	var eventsFile = "data/"+dayToFind.format("MM-DD")+".json"; // Local data files have 0 padding of single digit months and dates
+	var eventsJSON;
+	fs.readFile(eventsFile, function (err, data) { // Try to find a local data file generated using https://github.com/muffinista/history_parse
+		if (err) { 
+			if (err.code === 'ENOENT') { // This checks for a simple file not found, and uses the web as a backup source
+				console.log('File not found!');
+				var url = "http://history.muffinlabs.com/date/" + dayToFind.format("M/D"); // This site doesn't require 0 padding of months or days
+				request({
+					url: url,
+					json: true
+				}, function (error, response, body) {
+					if (!error && response.statusCode === 200) {
+						allEvents = parseEvents(body,dayToFind);
+						if (allEvents.events.length > 0 || allEvents.deaths.length > 0 || allEvents.births.length > 0) {
+							dfd.resolve({
+								events: allEvents.events,
+								deaths: allEvents.deaths,
+								births: allEvents.births
+							});
+						}
+						else {
+							dfd.reject();
+						}
+					}
+					else {
+						console.log("error");
+						dfd.reject();
+					}
+				});	
+			}
+			else  {
+				console.log("Something's gone terrible wrong: ",err);
+			}
+		}
+		else {
+			allEvents = parseEvents(JSON.parse(data), dayToFind);
+			console.log(allEvents.deaths);
+			if (allEvents.events.length > 0 || allEvents.deaths.length > 0 || allEvents.births.length > 0) {
+				dfd.resolve({
+					events: allEvents.events,
+					deaths: allEvents.deaths,
+					births: allEvents.births
+				});
+			}
+			else {
+				dfd.reject();
+			}
+		}
+	});
 	return dfd.promise();
 }
 
