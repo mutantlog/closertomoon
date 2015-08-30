@@ -9,7 +9,7 @@ _Note: you must be comfortable using your computer's command line interface to u
 
 If you don't already have have them, please install [Node.js](http://nodejs.org/). This will install two programs: `node`, which runs JavaScript from the command line, and `npm`, which helps you install software that Node.js can run.
 
-Make an empty project directory somewhere convenient for you, download this code, and unzip the contents to your project directory. Go to your project directory in the command line. There should be three files there: `.gitignore`, `README.md`, `bot.js`In that directory type:
+Make an empty project directory somewhere convenient for you, download this code, and unzip the contents to your project directory. Go to your project directory in the command line. There should be four files there: `.gitignore`, `README.md`, `bot.js`, and `config.js.EXAMPLE`. In that directory type:
 
 `npm install twit moment`
 
@@ -29,7 +29,7 @@ Next you'll see a screen with a "Details" tab. Click on the "Settings" tab and u
 
 Then go back to the Details tab, and at the bottom click "create my access token". Nothing might happen immediately. Wait a minute and reload the page. then there should be "access token" and "access token secret", which are both long strings of letters and numbers.
 
-Now use a text editor to create a "config.js" file. It should look like this:
+Now rename `config.js.EXAMPLE` to `config.js` and use a text editor to edit it. It should look like this:
 
 ```javascript
 module.exports = {
