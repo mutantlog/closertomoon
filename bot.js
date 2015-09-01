@@ -10,13 +10,13 @@ moment().format();
 // We need to include our configuration file
 var T = new Twit(require('./config.js'));
 
-var tweets = new Array();
+var tweets = [];
 var debug = false;
 
 function composeTweet(event, eventType) {
 	var tweetText = event; 
 	if (eventType == "Event") {
-		var tweetText = tweetText.substr(0,(tweetText.length)-1); // Events typically end in a period, which we don't want in the middle of a tweet
+		tweetText = tweetText.substr(0,(tweetText.length)-1); // Events typically end in a period, which we don't want in the middle of a tweet
 		if (tweetText.length > 93) { // If the tweet will be too long, truncate the event with an ellipsis
 			tweetText = tweetText.substr(0,92)+"…";
 		}
@@ -50,18 +50,18 @@ function tweetEvent(tweetText) {
 			if (err) {
 				console.log('There was an error with Twitter:', error);
 			}
-		})
+		});
 	}
 }
 
 function getLastTweet() {
 	var dfd = new _.Deferred();
-	var tweets = new Array();
+	var tweets = [];
 	T.get('statuses/home_timeline', {count: 10}, function(err, data, response) {
 //		console.log(err, data);
 		if (data) {
 			for (var exKey in data) {
-				tweets.push(data[exKey]['text']);
+				tweets.push(data[exKey].text);
 			}
 			dfd.resolve(tweets);
 		}
@@ -69,27 +69,28 @@ function getLastTweet() {
 			console.log('There was an error fetching tweets:', err);
 			dfd.reject();
 		}
-	})
+	});
 	return dfd.promise();
 }
 
 function parseEvents(eventsJSON, dayToFind) { // This function parses a set of events from the sources in retrieveAllEvents(dayToFind) and dumps out the ones that match the desired year into an array of arrays
-	var events = new Array();
-	var deaths = new Array();
-	var births = new Array();
-	for (var exKey in eventsJSON['data']['Events']) {
-		if (eventsJSON['data']['Events'][exKey]['year'] == dayToFind.get('year')) {
-			events.push(eventsJSON['data']['Events'][exKey]['text']);
+	var events = [];
+	var deaths = [];
+	var births = [];
+	var exKey;
+	for (exKey in eventsJSON.data.Events) {
+		if (eventsJSON.data.Events[exKey].year == dayToFind.get('year')) {
+			events.push(eventsJSON.data.Events[exKey].text);
 		}
 	}
-	for (var exKey in eventsJSON['data']['Deaths']) {
-		if (eventsJSON['data']['Deaths'][exKey]['year'] == dayToFind.get('year')) {
-			deaths.push(eventsJSON['data']['Deaths'][exKey]['text']);
+	for (exKey in eventsJSON.data.Deaths) {
+		if (eventsJSON.data.Deaths[exKey].year == dayToFind.get('year')) {
+			deaths.push(eventsJSONeventsJSON.data.Deaths[exKey].text);
 		}
 	}
-	for (var exKey in eventsJSON['data']['Births']) {
-		if (eventsJSON['data']['Births'][exKey]['year'] == dayToFind.get('year')) {
-			births.push(eventsJSON['data']['Births'][exKey]['text']);
+	for (exKey in eventsJSON.data.Births) {
+		if (eventsJSON.data.Births[exKey].year == dayToFind.get('year')) {
+			births.push(eventsJSON.data.Births[exKey].text);
 		}
 	}
 	return {events: events, deaths: deaths, births: births};
@@ -97,7 +98,7 @@ function parseEvents(eventsJSON, dayToFind) { // This function parses a set of e
 
 function retrieveAllEvents(dayToFind) {
 	var dfd = new _.Deferred();
-	var allEvents = new Array();
+	var allEvents = [];
 	var eventsFile = "data/"+dayToFind.format("MM-DD")+".json"; // Local data files have 0 padding of single digit months and dates
 	var eventsJSON;
 	fs.readFile(eventsFile, function (err, data) { // Try to find a local data file generated using https://github.com/muffinista/history_parse
@@ -153,19 +154,20 @@ function getEvent() {
 	var today = moment();
 	var landing = moment([1969, 6, 20]);
 	var dayInHistory = moment();
-	var recentTweets = new Array();
+	var recentTweets = [];
+	var listOfEvents = [];
 	var tweeted = false;
+	var eventToTweet, composedEventToTweet, splicePoint;
 	dayInHistory.subtract(Math.ceil(today.diff(landing, 'days')/2), 'days');
 //	dayInHistory.subtract(10, 'days'); // Uncomment and edit this line if you need to move the date around for testing
-	var listOfEvents = new Array();
 	retrieveAllEvents(dayInHistory).then(function(returnedListOfEvents) {
 		getLastTweet().then(function(recentTweets) {
-			var listOfEvents = returnedListOfEvents;
-			while (listOfEvents.events.length > 0 && tweeted == false) {
-				var eventToTweet = listOfEvents.events[Math.floor(Math.random() * listOfEvents.events.length)];
-				var composedEventToTweet = composeTweet(eventToTweet, "Event");
+			listOfEvents = returnedListOfEvents;
+			while (listOfEvents.events.length > 0 && tweeted === false) {
+				eventToTweet = listOfEvents.events[Math.floor(Math.random() * listOfEvents.events.length)];
+				composedEventToTweet = composeTweet(eventToTweet, "Event");
 				if (recentTweets.indexOf(composedEventToTweet) >= 0) {
-					var splicePoint = listOfEvents.events.indexOf(eventToTweet);
+					splicePoint = listOfEvents.events.indexOf(eventToTweet);
 					listOfEvents.events.splice(splicePoint,1);
 				}
 				else {
@@ -173,11 +175,11 @@ function getEvent() {
 					tweetEvent(composedEventToTweet);
 				}
 			}
-			while (listOfEvents.deaths.length > 0 && tweeted == false) {
-				var eventToTweet = listOfEvents.deaths[Math.floor(Math.random() * listOfEvents.deaths.length)];
-				var composedEventToTweet = composeTweet(eventToTweet, "Death");
+			while (listOfEvents.deaths.length > 0 && tweeted === false) {
+				eventToTweet = listOfEvents.deaths[Math.floor(Math.random() * listOfEvents.deaths.length)];
+				composedEventToTweet = composeTweet(eventToTweet, "Death");
 				if (recentTweets.indexOf(composedEventToTweet) >= 0) {
-					var splicePoint = listOfEvents.deaths.indexOf(eventToTweet);
+					splicePoint = listOfEvents.deaths.indexOf(eventToTweet);
 					listOfEvents.deaths.splice(splicePoint,1);
 				}
 				else {
@@ -185,11 +187,11 @@ function getEvent() {
 					tweetEvent(composedEventToTweet);
 				}
 			}
-			while (listOfEvents.births.length > 0 && tweeted == false) {
-				var eventToTweet = listOfEvents.births[Math.floor(Math.random() * listOfEvents.births.length)];
-				var composedEventToTweet = composeTweet(eventToTweet, "Birth");
+			while (listOfEvents.births.length > 0 && tweeted === false) {
+				eventToTweet = listOfEvents.births[Math.floor(Math.random() * listOfEvents.births.length)];
+				composedEventToTweet = composeTweet(eventToTweet, "Birth");
 				if (recentTweets.indexOf(composedEventToTweet) >= 0) {
-					var splicePoint = listOfEvents.births.indexOf(eventToTweet);
+					splicePoint = listOfEvents.births.indexOf(eventToTweet);
 					listOfEvents.births.splice(splicePoint,1);
 				}
 				else {
@@ -197,13 +199,10 @@ function getEvent() {
 					tweetEvent(composedEventToTweet);
 				}
 			}
-			if (tweeted == false) {
+			if (tweeted === false) {
 				console.log("I guess there were duplicates today");
 			}
-		})
-	},
-	function (err) {
-		console.log("No Events");
+		});
 	});
 }
 
