@@ -85,7 +85,7 @@ function parseEvents(eventsJSON, dayToFind) { // This function parses a set of e
 	}
 	for (exKey in eventsJSON.data.Deaths) {
 		if (eventsJSON.data.Deaths[exKey].year == dayToFind.get('year')) {
-			deaths.push(eventsJSONeventsJSON.data.Deaths[exKey].text);
+			deaths.push(eventsJSON.data.Deaths[exKey].text);
 		}
 	}
 	for (exKey in eventsJSON.data.Births) {
