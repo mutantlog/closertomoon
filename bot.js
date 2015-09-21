@@ -1,16 +1,10 @@
-// Our Twitter library
 var request = require('request');
-var cheerio = require('cheerio');
 var _ = require('underscore.deferred');
 var Twit = require('twit');
 var moment = require('moment');
 var fs = require('fs');
+var T = new Twit(require('./config.js')); // We need to include our configuration file
 moment().format();
-
-// We need to include our configuration file
-var T = new Twit(require('./config.js'));
-
-var tweets = [];
 var debug = false;
 
 function composeTweet(event, eventType) {
@@ -33,7 +27,6 @@ function composeTweet(event, eventType) {
 		}
 		tweetText = tweetText + ' was born closer to the moon landing than today';
 	}
-//	console.log(tweetText);
 	return(tweetText);
 }
 
@@ -43,10 +36,6 @@ function tweetEvent(tweetText) {
 	}
 	else {
 		T.post('statuses/update', { status: tweetText }, function (err, data, response) {
-	//		console.log(err, data);
-			if (response) {
-	//			console.log('Success! It tweeted an event');
-			}
 			if (err) {
 				console.log('There was an error with Twitter:', error);
 			}
@@ -58,7 +47,6 @@ function getLastTweet() {
 	var dfd = new _.Deferred();
 	var tweets = [];
 	T.get('statuses/home_timeline', {count: 10}, function(err, data, response) {
-//		console.log(err, data);
 		if (data) {
 			for (var exKey in data) {
 				tweets.push(data[exKey].text);
@@ -206,10 +194,4 @@ function getEvent() {
 	});
 }
 
-// Try to retweet something as soon as we run the program...
-getEvent();
-
-// This code is originally from dariusk but I'm calling this script daily via cron instead
-// ...and then every hour after that. Time here is in milliseconds, so
-// 1000 ms = 1 second, 1 sec * 60 = 1 min, 1 min * 60 = 1 hour --> 1000 * 60 * 60
-//setInterval(getEvent, 1000 * 60 * 60);
+getEvent(); // Try to retweet something as soon as we run the program...
