@@ -1,21 +1,14 @@
 {
   "name": "closertomoon",
-  "version": "1.5.0",
+  "version": "1.5.2",
   "description": "This bot tweets an event, death or birth that happened closer to the moon landing than today.",
   "main": "bot.js",
   "dependencies": {
-    "grunt": "^0.4.5",
-    "array-splice": "^0.1.1",
-    "jshint": "^2.8.0",
     "moment": "^2.10.6",
-    "q": "^1.4.1",
     "request": "^2.55.0",
-    "sync-request": "^2.0.1",
-    "twit": "^1.1.20",
+    "twit": "^2.1.0",
     "cheerio": "^0.19.0",
-    "underscore": "^1.8.3",
-    "underscore.deferred": "^0.4.0",
-    "xml2js": "^0.4.10"
+    "underscore.deferred": "^0.4.0"
   },
   "devDependencies": {},
   "scripts": {
