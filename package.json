@@ -1,6 +1,6 @@
 {
   "name": "closertomoon",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "This bot tweets an event, death or birth that happened closer to the moon landing than today.",
   "main": "bot.js",
   "dependencies": {
