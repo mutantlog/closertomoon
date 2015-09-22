@@ -76,4 +76,4 @@ exports.retrieveAllEvents = function(dayToFind) {
 		}
 	});
 	return dfd.promise();
-}
+};
