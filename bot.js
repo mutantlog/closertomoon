@@ -1,5 +1,4 @@
 var events = require('./events.js');
-var request = require('request');
 var _ = require('underscore.deferred');
 var Twit = require('twit');
 var moment = require('moment');

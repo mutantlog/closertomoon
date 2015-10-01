@@ -1,5 +1,6 @@
 var _ = require('underscore.deferred');
 var fs = require('fs');
+var request = require('request');
 
 function parseEvents(eventsJSON, dayToFind) { // This function parses a set of events from the sources in retrieveAllEvents(dayToFind) and dumps out the ones that match the desired year into an array of arrays
 	var events = [];
