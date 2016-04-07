@@ -4,9 +4,9 @@
   "description": "This bot tweets an event, death or birth that happened closer to the moon landing than today.",
   "main": "bot.js",
   "dependencies": {
-    "moment": "^2.11.2",
-    "request": "^2.69.0",
-    "twit": "^2.2.2",
+    "moment": "^2.12.0",
+    "request": "^2.70.0",
+    "twit": "^2.2.3",
     "underscore.deferred": "^0.4.0"
   },
   "devDependencies": {},
