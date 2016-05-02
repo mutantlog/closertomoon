@@ -6,7 +6,7 @@
   "dependencies": {
     "moment": "^2.12.0",
     "request": "^2.72.0",
-    "twit": "^2.2.3",
+    "twit": "^2.2.4",
     "underscore.deferred": "^0.4.0"
   },
   "devDependencies": {},
