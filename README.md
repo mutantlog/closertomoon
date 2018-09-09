@@ -4,8 +4,6 @@ This bot tweets an event, death or birth that happened closer to the moon landin
 
 _Note: you must be comfortable using your computer's command line interface to use this bot. If you've never used it, there are tutorials for [Mac OSX](http://blog.teamtreehouse.com/introduction-to-the-mac-os-x-command-line) and [Windows](http://www.bleepingcomputer.com/tutorials/windows-command-prompt-introduction/)._
 
-[![bitHound Score](https://www.bithound.io/github/mutantlog/closertomoon/badges/score.svg)](https://www.bithound.io/github/mutantlog/closertomoon)
-
 ##Installation
 (This is pretty much verbatim from ExampleBot)
 
